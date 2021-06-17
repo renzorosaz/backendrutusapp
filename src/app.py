@@ -9,3 +9,5 @@ app.config['SQLALCHEMY_TRACK_MODIFICATION'] = False
 
 db = SQLAlchemy(app)
 ma= Marshmallow(app)
+
+#agregando temas
