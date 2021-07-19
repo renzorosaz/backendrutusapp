@@ -1,0 +1,7 @@
+python
+Flask
+SQLAlchemy
+Marshmallow
+Api
+request
+jsonify

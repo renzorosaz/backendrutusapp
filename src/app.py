@@ -1,11 +1,7 @@
 from flask import Flask,jsonify,request
-from decimal import Decimal
-from datetime import datetime
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from flask import Response
-import json
 
 #from .controllers.negocioturistico_controller import NegocioTurisController
 
