@@ -1,7 +1,6 @@
 from flask import Flask,jsonify,request
 from decimal import Decimal
 from datetime import datetime
-from sqlalchemy.dialects.mysql import LONGTEXT
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -381,7 +380,7 @@ def get_excursiones():
     message={
         "status":200,
         "message":"OK",
-        "result":excursions_schema.dump(listar_excursiones)
+        "result":excursiones_schema.dump(listar_excursiones)
     }
 
     return jsonify(message)
@@ -395,8 +394,149 @@ def buscar_excursion(idexcursion):
     return excursion_schema.jsonify(excursion_encontrada)
 
 # #MODELO DE SOLICITUD DE RESERVA
+class MedioPago(db.Model):
+    idmedio_pago = db.Column(db.Integer, primary_key=True)
+    descripcion = db.Column(db.String(45))
 
+    def __init__(self,idmedio_pago,descripcion):
+        self.idmedio_pago=idmedio_pago,
+        self.descripcion=descripcion
 
+class MedioPagoSchema(ma.Schema):
+    class Meta:
+        fields =('idmedio_pago','descripcion')
+
+megiopago_schema = MedioPagoSchema()
+megiopagos_schema = MedioPagoSchema(many=True)
+
+class SolicitudReserva(db.Model):
+    idsolicitud_reserva=db.Column(db.Integer,primary_key=True)
+    #regiones=db.relationship('Region',backref='region')
+    idexcursion=db.Column(db.Integer,db.ForeignKey('excursion.idexcursion'))
+    precio_total= db.Column(db.Numeric)
+    fecha_registro=db.Column(db.DATE)
+    estado_solicitud= db.Column(db.Integer)
+    cantidad_acompaniantes=db.Column(db.String(45))
+    idcliente=db.Column(db.Integer,db.ForeignKey('cliente.idcliente'))
+    idmedio_pago=db.Column(db.Integer,db.ForeignKey('medio_pago.idmedio_pago'))
+    nombre_excursion=db.Column(db.String(100))
+    nombre_cliente = db.Column(db.String(100))
+
+    def __init__(self,idexcursion,nombre_excursion,precio_total,fecha_registro,estado_solicitud,cantidad_acompaniantes,idmedio_pago,idcliente,nombre_cliente):
+        self.idexcursion = idexcursion
+        self.nombre_excursion = nombre_excursion
+        self.precio_total = precio_total
+        self.fecha_registro = fecha_registro
+        self.estado_solicitud = estado_solicitud
+        self.cantidad_acompaniantes = cantidad_acompaniantes
+        self.idmedio_pago = idmedio_pago
+        self.idcliente = idcliente
+        self.nombre_cliente = nombre_cliente
+
+class SolicitudReservaSchema(ma.Schema):
+    class Meta:
+        fields =('idsolicitud_reserva','idexcursion','nombre_excursion',
+        'precio_total','fecha_registro','estado_solicitud','cantidad_acompaniantes',
+        'idmedio_pago','idcliente','nombre_cliente')
+
+solicitudreserva_schema = SolicitudReservaSchema()
+solicitudreservas_schema = SolicitudReservaSchema(many=True)
+
+@app.route('/solicitudreserva',methods=['POST'])
+def create_solicitud():
+
+    print(request.json)
+    idexcursion= request.json['idexcursion']
+    nombre_excursion= request.json['nombre_excursion']
+    precio_total=request.json['precio_total']
+    fecha_registro= request.json['fecha_registro']
+    estado_solicitud=request.json['estado_solicitud']
+    cantidad_acompaniantes=request.json['cantidad_acompaniantes']
+    idmedio_pago=request.json['idmedio_pago']
+    idcliente =request.json['idcliente']
+    nombre_cliente=request.json['nombre_cliente']
+    nueva_solicitud = SolicitudReserva(idexcursion,nombre_excursion,precio_total,fecha_registro,estado_solicitud,cantidad_acompaniantes,idmedio_pago,idcliente,nombre_cliente)
+
+    db.session.add(nueva_solicitud)
+    db.session.commit()
+
+    message={
+        "status":200,
+        "message":"OK",
+        "result":solicitudreserva_schema.dump(nueva_solicitud)
+    }
+    print(message)
+    #raise KeyError(message)
+    
+    #return cliente_schema.jsonify(nuevo_cliente)
+    return jsonify(message)
+
+@app.route('/listarsolireser',methods=['GET'])
+def get_solicitudesreserva():
+    listar_solicitudes= SolicitudReserva.query.all()
+
+   # result = negociosturisticos_schema.dump(listar_negocios)
+
+    message={
+        "status":200,
+        "message":"OK",
+        "result":solicitudreservas_schema.dump(listar_solicitudes)
+    }
+
+    return jsonify(message)
+    
+    #return jsonify(result)
+
+@app.route('/detallesolici/<idsolicitud_reserva>',methods=['GET'])
+def detalle_solicitud(idsolicitud_reserva):
+    solicitud_encontrada = SolicitudReserva.query.get(idsolicitud_reserva)
+    return solicitudreserva_schema.jsonify(solicitud_encontrada)
+
+#PAGAR SOLICITUD DE RESERVA CONFIRMADA
+
+class Reserva(db.Model):
+    idreserva = db.Column(db.Integer,primary_key=True)
+    idsolicitud_reserva = db.Column(db.Integer,db.ForeignKey('solicitud_reserva.idsolicitud_reserva'))
+    fecha_registro=db.Column(db.DATE)
+    nombre_cliente = db.Column(db.String(100))
+
+    def __init__(self,idsolicitud_reserva,fecha_registro,nombre_cliente):
+        self.idsolicitud_reserva = idsolicitud_reserva
+        self.fecha_registro = fecha_registro
+        self.nombre_cliente = nombre_cliente
+
+class ReservaSchema(ma.Schema):
+    class Meta:
+        fields =('idreserva','idsolicitud_reserva','fecha_registro','nombre_cliente')
+
+reserva_schema = ReservaSchema()
+reservas_schema = ReservaSchema(many=True)
+
+@app.route('/registrarreserva',methods=['POST'])
+def create_reserva():
+
+    print(request.json)
+    
+    idsolicitud_reserva = request.json['idsolicitud_reserva']
+    fecha_registro = request.json['fecha_registro']
+    nombre_cliente=request.json['nombre_cliente']
+    
+    nueva_reserva = Reserva(idsolicitud_reserva,fecha_registro,nombre_cliente)
+    #print(nueva_reserva)
+    db.session.add(nueva_reserva)
+    db.session.commit()
+
+    message={
+        "status":200,
+        "message":"OK",
+        "result":reserva_schema.dump(nueva_reserva)
+    }
+    print(message)
+    #raise KeyError(message)
+    
+    #return cliente_schema.jsonify(nuevo_cliente)
+    return jsonify(message)
+    
 # #MODELO DE ITINERARIO
 
 
