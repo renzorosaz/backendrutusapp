@@ -1,7 +1,0 @@
-python-3.9.6
-Flask
-SQLAlchemy
-Marshmallow
-Api
-request
-jsonify
