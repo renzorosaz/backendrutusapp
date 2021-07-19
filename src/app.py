@@ -18,12 +18,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATION'] = False
 
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://root:030115lol@localhost/rutusbd'
 
-<<<<<<< HEAD
-db = SQLAlchemy(app)
-ma= Marshmallow(app)
-
-#agregando temas
-=======
 
 #api.add_resource(NegocioTurisController,'/negocioturistico')
 #MODELO TIPO DE USUARIO DE USUARIO
@@ -554,4 +548,3 @@ if __name__ == '__main__':
 @app.route('/',methods =['GET'])
 def index():
     return jsonify({"message":"bienvenido a mi api"})
->>>>>>> desarrollo
