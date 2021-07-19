@@ -153,6 +153,8 @@ def create_negocioturistico():
 
 @app.route('/listarnegociosturist',methods=['GET'])
 def get_negociosturis():
+
+
     listar_negocios= NegocioTuristico.query.all()
 
    # result = negociosturisticos_schema.dump(listar_negocios)
@@ -541,6 +543,6 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 
-@app.route('/',methods =['GET'])
+@app.route('/home',methods =['GET'])
 def index():
     return jsonify({"message":"bienvenido a mi api"})
